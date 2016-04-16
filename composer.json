@@ -2,6 +2,7 @@
     "name": "soki/tinyphp",
     "description": "The PHP Framework.",
     "keywords": ["framework", "php"],
+    "version": "0.1.0",
     "license": "MIT",
     "type": "library",
     "require": {
