@@ -1,17 +1,16 @@
 {
     "name": "soki/tinyphp",
-    "description": "The PHP Framework.",
-    "keywords": ["framework", "php"],
-    "version": "0.1.0",
-    "license": "MIT",
     "type": "library",
+    "description": "The PHP Framework",
+    "keywords": [],
+    "license": "MIT",
     "require": {
         "php": ">=5.5.9",
         "illuminate/container": "5.2.*"
     },
     "autoload": {
         "psr-4": {
-            "TinyPHP\\": "src/tinyphp",
+            "TinyPHP\\": "src/tinyphp"
         },
         "files": [
             "src/helpers.php"
