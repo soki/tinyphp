@@ -10,7 +10,7 @@
     },
     "autoload": {
         "psr-4": {
-            "TinyPHP\\": "src/tinyphp"
+            "TinyPHP\\": "src"
         },
         "files": [
             "src/helpers.php"
