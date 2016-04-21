@@ -9,6 +9,7 @@ define('DS', DIRECTORY_SEPARATOR);
 class Application extends Container
 {
     protected $basePath;
+    private $yaconf = false;
     private $configPath;
     private $configItems = [];
 
@@ -20,6 +21,11 @@ class Application extends Container
 
     protected function bootstrap()
     {
+        $yaconf = ini_get_all('yaconf');
+        if (isset($yaconf['yaconf.directory'])) {
+            $this->yaconf = true;
+        }
+
         static::setInstance($this);
 
         $this->singleton("TinyPHP\Http\Request");
@@ -60,6 +66,10 @@ class Application extends Container
 
     public function configure($name)
     {
+        if ($this->yaconf) {
+            return;
+        }
+
         if ($this->configPath) {
             $dir = rtrim($this->configPath, DS);
         } else {
@@ -72,9 +82,13 @@ class Application extends Container
 
     public function config($key)
     {
-        list($name, $key) = explode('.', $key);
-        if (isset($this->configItems[$name][$key])) {
-            return $this->configItems[$name][$key];
+        if ($this->yaconf) {
+            return Yaconf::get($key);
+        } else {
+            list($name, $key) = explode('.', $key);
+            if (isset($this->configItems[$name][$key])) {
+                return $this->configItems[$name][$key];
+            }
         }
 
         return;

@@ -1,10 +1,10 @@
 <?php
 
-namespace TinyPHP\Database;
+namespace TinyPHP\Helper;
 
 use PDO;
 
-class Client
+class DBHelper
 {
     private $data = [];
     private $params = null;
