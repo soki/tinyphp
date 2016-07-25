@@ -21,11 +21,6 @@ class Application extends Container
 
     protected function bootstrap()
     {
-        $yaconf = ini_get_all('yaconf');
-        if (isset($yaconf['yaconf.directory'])) {
-            $this->yaconf = true;
-        }
-
         static::setInstance($this);
 
         $this->singleton("TinyPHP\Http\Request");
@@ -98,7 +93,6 @@ class Application extends Container
     {
         $this->aliases = [
             'request' => 'TinyPHP\Http\Request',
-            'view' => 'TinyPHP\Http\SmartyView',
         ];
     }
 }

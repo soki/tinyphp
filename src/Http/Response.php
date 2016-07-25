@@ -105,8 +105,9 @@ class Response
     {
         $this->sendHeaders();
 
-        if (!empty($this->viewInfo)) {
-            call_user_func($this->viewInfo[0], $this->viewInfo[1]);
+        if (!empty($this->viewHandle)) {
+            $handle = $this->viewHandle;
+            $handle();
         } else {
             echo $this->content;
         }
@@ -116,15 +117,14 @@ class Response
         }
     }
 
-    public function view($name)
+    public function view($_name)
     {
         $params = $this->content;
-        $callback = function ($_name) use ($params) {
+        $this->viewHandle = function () use ($params, $_name) {
             extract($params);
 
-            $a = require app()->resPath().DS.'templates'.DS.$_name.'.php';
+            require app()->resPath().DS.'templates'.DS.$_name.'.php';
         };
-        $this->viewInfo = [$callback, $name];
 
         return $this;
     }

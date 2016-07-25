@@ -6,14 +6,16 @@ use Closure;
 
 class Request
 {
-    public $namespace;
+    private $namespace = [];
+    private $middleware = [];
     private $session;
+    private $controllerAction;
 
     public function __construct()
     {
     }
 
-    public function input($key = null, $default = null)
+    public function input($key = null, $default = '')
     {
         $params = $_GET + $_POST;
         if ($key == null) {
@@ -37,6 +39,11 @@ class Request
         }
 
         return;
+    }
+
+    public function getContent()
+    {
+        return file_get_contents('php://input');
     }
 
     public function getMethod()
@@ -70,9 +77,14 @@ class Request
         return $this->session;
     }
 
+    public function setNamespace($data)
+    {
+        $this->namespace = array_merge($this->namespace, $data);
+    }
+
     public function dispatch($namespace, Closure $callback)
     {
-        $this->namespace = $namespace;
+        $this->namespace['controller'] = $namespace;
         $router = new Router();
         call_user_func($callback, $router);
 
@@ -80,7 +92,7 @@ class Request
 
         switch ($routeInfo[0]) {
             case Router::FOUND:
-                $response = $this->handleRoute($routeInfo);
+                $response = $this->handle($router->getMiddleware(), $routeInfo);
                 break;
             case Router::NOT_FOUND:
                 $response = new Response('Not Found', 404);
@@ -97,16 +109,55 @@ class Request
         }
     }
 
+    public function next()
+    {
+        if (!empty($this->middleware)) {
+            $handle = array_shift($this->middleware);
+            $namespace = $this->namespace['middleware'];
+            $middleware = $namespace.'\\'.$handle;
+
+            return (new $middleware())->handle($this);
+        } else {
+            $action = $this->controllerAction;
+
+            return $action();
+        }
+    }
+
+    private function handle($middleware, $routeInfo)
+    {
+        if (!empty($routeInfo[1]['middleware'])) {
+            $middleware = array_merge($middleware, $routeInfo[1]['middleware']);
+        }
+        $this->middleware = $middleware;
+
+        $this->controllerAction = function () use ($routeInfo) {
+            return $this->handleRoute($routeInfo);
+        };
+
+        return $this->next();
+    }
+
     private function handleRoute($routeInfo)
     {
-        list($controller, $method) = explode('@', $routeInfo[1]['action']);
-        $controller = $this->namespace.'\\'.$controller;
-        if (!method_exists($instance = new $controller(), $method)) {
-            $response = new Response('Internal Server Error', 500);
+        $action = $routeInfo[1]['action'];
+        $params = $routeInfo[2];
+
+        if (!is_callable($action)) {
+            $namespace = $this->namespace['controller'];
+            list($controller, $method) = explode('@', $action);
+            $controller = $namespace.'\\'.$controller;
+            if (!method_exists($instance = new $controller(), $method)) {
+                return new Response('Internal Server Error', 500);
+            } else {
+                $callable = [$instance, $method];
+            }
         } else {
-            $response = app()->call([$instance, $method]);
+            $callable = $action;
         }
 
-        return $response;
+        array_unshift($params, $this);
+
+        return call_user_func_array($callable, $params);
     }
 }

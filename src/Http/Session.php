@@ -9,25 +9,24 @@ class Session
     private $data;
     private $change = false;
     private $handler = [
-            'files' => 'fileHandler',
-            'redis' => 'redisHandler',
+        'files' => 'fileHandler',
     ];
 
     public function __construct()
     {
-        $session = config('app.session');
-        if (empty($session)) {
+        $cfg = config('app.session');
+        if (empty($cfg)) {
             throw new Exception('app.session is not set', 1);
         }
 
-        $saveHandler = $session['save_handler'];
-        session_name($session['name']);
-        ini_set('session.gc_maxlifetime', $session['maxlifetime']);
-        ini_set('session.save_path', $session['save_path']);
+        $saveHandler = $cfg['save_handler'];
+        session_name($cfg['name']);
 
         if (isset($this->handler[$saveHandler])) {
             $handler = $this->handler[$saveHandler];
-            $this->$handler();
+            $this->$handler($cfg);
+        } else {
+            $this->setHandler(new $saveHandler());
         }
 
         session_start();
@@ -40,14 +39,11 @@ class Session
         session_set_save_handler($handler);
     }
 
-    private function fileHandler()
+    private function fileHandler($config)
     {
+        ini_set('session.gc_maxlifetime', $config['maxlifetime']);
+        ini_set('session.save_path', $config['save_path']);
         ini_set('session.save_handler', 'files');
-    }
-
-    private function redisHandler()
-    {
-        session_set_save_handler(new RedisSessionHandler());
     }
 
     public function get($key)
