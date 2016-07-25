@@ -47,6 +47,7 @@ class Router
     public function group($prefix, $cb)
     {
         $this->groupData['prefix'] = $prefix;
+        $this->groupData['middleware'] = [];
         call_user_func($cb);
         $this->groupData = null;
     }
